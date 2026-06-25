@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LM发货占比 - 5月份物流价格看板</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; min-height: 100vh; padding: 20px; }
+        .container { max-width: 1600px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 28px 32px; margin-bottom: 24px; box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3); color: white; }
+        .header h1 { font-size: 32px; font-weight: 700; }
+        .header p { margin-top: 8px; opacity: 0.9; }
+        .stats-row { display: flex; justify-content: center; gap: 20px; margin-bottom: 24px; }
+        .stat-card { background: white; border-radius: 10px; padding: 14px 24px; box-shadow: 0 3px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; }
+        .stat-card .label { font-size: 13px; color: #888; margin-bottom: 6px; }
+        .stat-card .value { font-size: 22px; font-weight: 700; color: #333; }
+        .stat-card.air { border-left: 4px solid #3498DB; }
+        .stat-card.express { border-left: 4px solid #E74C3C; }
+        .stat-card.sea { border-left: 4px solid #2ECC71; }
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+        .chart-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .chart-card h3 { font-size: 16px; margin-bottom: 16px; color: #333; }
+        .chart-container { height: 280px; }
+        .legend { display: flex; justify-content: center; gap: 20px; margin-top: 12px; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+        .legend-color { width: 12px; height: 12px; border-radius: 2px; }
+        .channels-card { grid-column: span 2; }
+        .channels-grid { display: flex; justify-content: space-around; gap: 12px; }
+        .channel-item { border-radius: 8px; padding: 12px 20px; color: white; display: flex; flex-direction: column; align-items: center; min-width: 140px; }
+        .channel-item .name { font-size: 13px; margin-bottom: 6px; }
+        .channel-item .price { font-size: 20px; font-weight: 700; margin-bottom: 3px; }
+        .channel-item .meta { font-size: 11px; opacity: 0.8; }
+        .channel-item.air { background: linear-gradient(135deg, #4ecdc4, #44a3a0); }
+        .channel-item.express { background: linear-gradient(135deg, #ff6b6b, #ee5a5a); }
+        .channel-item.sea { background: linear-gradient(135deg, #45b7d1, #3a9dc9); }
+        .footer { text-align: center; padding: 20px; color: #888; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 LM发货占比 - 5月份物流价格看板</h1>
+            <p>数据来源: 大货发货记录 | 筛选条件: 发货团队=乐米, 提货日期=2026年5月</p>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card air">
+                <div class="label">✈️ 空运均价</div>
+                <div class="value">¥60.19</div>
+            </div>
+            <div class="stat-card express">
+                <div class="label">🚀 快递均价</div>
+                <div class="value">¥67.08</div>
+            </div>
+            <div class="stat-card sea">
+                <div class="label">🚢 快船均价</div>
+                <div class="value">¥15.92</div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>LM发货渠道占比</h3>
+                <div class="chart-container"><canvas id="channelPieChart"></canvas></div>
+                <div class="legend">
+                    <div class="legend-item"><div class="legend-color" style="background: #3498DB;"></div><span>空运: 47,789件 (80.1%)</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #E74C3C;"></div><span>快递: 5,340件 (8.9%)</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #2ECC71;"></div><span>快船: 6,540件 (11.0%)</span></div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3>5月份每周单价趋势</h3>
+                <div class="chart-container"><canvas id="weeklyTrendChart"></canvas></div>
+                <div class="legend">
+                    <div class="legend-item"><div class="legend-color" style="background: #E74C3C;"></div><span>快递</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #3498DB;"></div><span>空运</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: #2ECC71;"></div><span>快船</span></div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3>每周订单数量分布</h3>
+                <div class="chart-container"><canvas id="weeklyOrdersChart"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>各运输类型均价对比</h3>
+                <div class="chart-container"><canvas id="avgPriceChart"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>空运渠道每周单价区间</h3>
+                <div class="chart-container"><canvas id="airChannelRangeChart"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>快递渠道每周单价区间</h3>
+                <div class="chart-container"><canvas id="expressChannelRangeChart"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>快船渠道每周单价区间</h3>
+                <div class="chart-container"><canvas id="seaChannelRangeChart"></canvas></div>
+            </div>
+
+            <div class="chart-card channels-card">
+                <h3>5月份乐米渠道详情</h3>
+                <div class="channels-grid">
+                    <div class="channel-item air"><div class="name">✈️ 空运</div><div class="price">¥60.19</div><div class="meta">件数: 47,789 | 占比: 80.1%</div></div>
+                    <div class="channel-item express"><div class="name">🚀 快递</div><div class="price">¥67.08</div><div class="meta">件数: 5,340 | 占比: 8.9%</div></div>
+                    <div class="channel-item sea"><div class="name">🚢 快船</div><div class="price">¥15.92</div><div class="meta">件数: 6,540 | 占比: 11.0%</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>数据来源: 大货发货记录 | 筛选条件: 发货团队=乐米, 提货日期=2026年5月</p>
+        </div>
+    </div>
+
+    <script>
+        const airChannelData = {labels: ['第19周', '第20周', '第21周', '第22周'], channels: {"九方": {min: [58.0, 58.0, 59.0, 61.5], max: [58.0, 58.0, 59.0, 61.5]}, "九方-快线": {min: [62.5, 62.5, 62.5, 66.5], max: [62.5, 62.5, 62.5, 66.5]}, "九方-普线": {min: [58.5, 58.5, 58.5, 62.5], max: [58.5, 58.5, 58.5, 62.5]}, "优禾": {min: [60.0, 60.0, 61.5, 63.5], max: [61.0, 60.0, 61.5, 63.5]}, "美通": {min: [null, 59.0, 60.0, 64.5], max: [null, 59.0, 60.0, 64.5]}}};
+        const expressChannelData = {labels: ['第19周', '第20周', '第21周', '第22周'], channels: {"UPS-红单": {min: [44.27, null, null, null], max: [44.27, null, null, null]}, "原飞航-特快": {min: [47.5, 47.5, 47.5, 47.5], max: [47.5, 47.5, 47.5, 47.5]}, "正鑫UPS特快/6000": {min: [71.0, 71.5, null, null], max: [71.5, 71.5, null, null]}, "河南环亚-特快": {min: [69.0, 71.5, 72.0, null], max: [69.0, 74.0, 72.0, null]}, "华贸-特快": {min: [null, 68.0, 69.0, 72.0], max: [null, 68.0, 69.0, 72.0]}, "原飞航-红单": {min: [null, 44.0, null, null], max: [null, 44.0, null, null]}, "正鑫-红单": {min: [null, 68.5, null, null], max: [null, 68.5, null, null]}, "正鑫联邦/6000": {min: [null, 68.0, 68.0, 70.0], max: [null, 68.0, 68.0, 70.0]}, "华贸-红单": {min: [null, null, null, 67.0], max: [null, null, null, 67.0]}}};
+        const seaChannelData = {labels: ['第19周', '第20周', '第21周', '第22周'], channels: {"德速-合德-快递派": {min: [13.5, 16.3, null, 17.0], max: [16.0, 16.3, null, 17.0]}, "联宇-only18-快递派": {min: [null, 15.5, 16.5, 16.9], max: [null, 15.5, 16.5, 16.9]}, "联宇-only18卡派": {min: [null, 14.8, null, null], max: [null, 14.8, null, null]}, "美通S63": {min: [null, null, 16.0, 16.5], max: [null, null, 16.0, 16.5]}}};
+
+        new Chart(document.getElementById('channelPieChart'), {
+            type: 'pie',
+            data: {
+                labels: ['空运', '快递', '快船'],
+                datasets: [{data: [47789, 5340, 6540 ], backgroundColor: ['#3498DB', '#E74C3C', '#2ECC71'], borderWidth: 2}]
+            },
+            options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}}}
+        });
+
+        new Chart(document.getElementById('weeklyTrendChart'), {
+            type: 'line',
+            data: {
+                labels: ["第19周", "第20周", "第21周", "第22周"],
+                datasets: [
+                    {label: '快递', data: [65.47, 67.14, 67.92, 68.1], borderColor: '#E74C3C', tension: 0.4, fill: false, pointRadius: 6},
+                    {label: '空运', data: [59.16, 59.35, 60.42, 62.5], borderColor: '#3498DB', tension: 0.4, fill: false, pointRadius: 6},
+                    {label: '快船', data: [15.25, 15.11, 16.26, 16.86], borderColor: '#2ECC71', tension: 0.4, fill: false, pointRadius: 6}
+                ]
+            },
+            options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}}, scales: {y: {min: 0, title: {display: true, text: '单价 (¥)'}}}}
+        });
+
+        new Chart(document.getElementById('weeklyOrdersChart'), {
+            type: 'bar',
+            data: {
+                labels: ["第19周", "第20周", "第21周", "第22周"],
+                datasets: [
+                    {label: '快递', data: [2640, 2760, 2220, 2055], backgroundColor: '#E74C3C', borderRadius: 4},
+                    {label: '空运', data: [16904, 13702, 17745, 9930], backgroundColor: '#3498DB', borderRadius: 4},
+                    {label: '快船', data: [1230, 2895, 2895, 2160], backgroundColor: '#2ECC71', borderRadius: 4}
+                ]
+            },
+            options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {position: 'bottom'}}, scales: {x: {stacked: true}, y: {stacked: true, title: {display: true, text: '件数'}}}}
+        });
+
+        new Chart(document.getElementById('avgPriceChart'), {
+            type: 'bar',
+            data: {labels: ['空运', '快递', '快船'], datasets: [{data: [60.19, 67.08, 15.92 ], backgroundColor: ['#3498DB', '#E74C3C', '#2ECC71'], borderRadius: 4}]},
+            options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}}, scales: {y: {min: 0, title: {display: true, text: '均价 (¥)'}}}}
+        });
+
+        function createRangeChart(canvasId, data, colorList, minY, maxY) {
+            const datasets = [];
+            let colorIdx = 0;
+            for (const [name, channelData] of Object.entries(data.channels)) {
+                const color = colorList[colorIdx % colorList.length];
+                datasets.push({label: name, data: channelData.min, borderColor: color, borderWidth: 2, pointRadius: 6, showLine: true});
+                datasets.push({label: name + ' (最高)', data: channelData.max, borderColor: color, borderWidth: 2, borderDash: [5, 5], pointRadius: 6, showLine: true});
+                colorIdx++;
+            }
+            new Chart(document.getElementById(canvasId), {
+                type: 'line',
+                data: {labels: data.labels, datasets: datasets},
+                options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {position: 'bottom', labels: {font: {size: 10}}}}, scales: {y: {min: minY, max: maxY, title: {display: true, text: '单价 (¥)'}}}}
+            });
+        }
+
+        createRangeChart('airChannelRangeChart', airChannelData, ['#ffc107', '#ff9800', '#ff5722', '#4ecdc4', '#4285f4', '#9c27b0'], 35, 80);
+        createRangeChart('expressChannelRangeChart', expressChannelData, ['#e91e63', '#f44336', '#ff5722', '#ff9800', '#ffc107', '#4285f4', '#9c27b0'], 35, 80);
+        createRangeChart('seaChannelRangeChart', seaChannelData, ['#45b7d1', '#4ecdc4', '#8bc34a'], 10, 20);
+    </script>
+</body>
+</html>
